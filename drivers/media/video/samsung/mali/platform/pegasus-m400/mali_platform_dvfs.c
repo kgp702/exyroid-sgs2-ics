@@ -37,6 +37,9 @@
 
 static int bMaliDvfsRun=0;
 
+static _mali_osk_atomic_t bottomlock_status;
+static int bottom_lock_step;
+
 typedef struct mali_dvfs_tableTag{
 	unsigned int clock;
 	unsigned int freq;
@@ -275,6 +278,14 @@ static mali_bool set_mali_dvfs_status(u32 step,mali_bool boostup)
 #endif
 	}
 
+#ifdef EXYNOS4_ASV_ENABLED
+	if (mali_dvfs[step].clock == 160)
+		exynos4x12_set_abb_member(ABB_G3D, ABB_MODE_100V);
+	else
+		exynos4x12_set_abb_member(ABB_G3D, ABB_MODE_130V);
+#endif
+
+
 	set_mali_dvfs_current_step(validatedStep);
 	/*for future use*/
 	maliDvfsStatus.pCurrentDvfs = &mali_dvfs[validatedStep];
@@ -343,6 +354,7 @@ static unsigned int decideNextStatus(unsigned int utilization)
 	if (mali_runtime_resumed >= 0) {
 		level = mali_runtime_resumed;
 		mali_runtime_resumed = -1;
+		return level;
 	}
 
 	if (mali_dvfs_threshold[maliDvfsStatus.currentStep].upthreshold
@@ -397,21 +409,25 @@ static unsigned int decideNextStatus(unsigned int utilization)
 			for (i = 0; i < MALI_DVFS_STEPS; i++) {
 				step[i].clk = mali_dvfs_all[0].clock;
 			}
+			maliDvfsStatus.currentStep = 0;
 		} else if (mali_dvfs_control < mali_dvfs_all[2].clock && mali_dvfs_control >= mali_dvfs_all[1].clock) {
 			int i = 0;
 			for (i = 0; i < MALI_DVFS_STEPS; i++) {
 				step[i].clk = mali_dvfs_all[1].clock;
 			}
+			maliDvfsStatus.currentStep = 1;
 		} else if (mali_dvfs_control < mali_dvfs_all[3].clock && mali_dvfs_control >= mali_dvfs_all[2].clock) {
 			int i = 0;
 			for (i = 0; i < MALI_DVFS_STEPS; i++) {
 				step[i].clk = mali_dvfs_all[2].clock;
 			}
+			maliDvfsStatus.currentStep = 2;
 		} else {
 			int i = 0;
 			for (i = 0; i < MALI_DVFS_STEPS; i++) {
 				step[i].clk  = mali_dvfs_all[3].clock;
 			}
+			maliDvfsStatus.currentStep = 3;
 		}
 		step0_clk = step[0].clk;
 		change_dvfs_tableset(step0_clk, 0);
@@ -431,6 +447,12 @@ static unsigned int decideNextStatus(unsigned int utilization)
 	}
 
 	mali_dvfs_clk = mali_dvfs_control;
+
+	if (_mali_osk_atomic_read(&bottomlock_status) > 0) {
+		if (level < bottom_lock_step)
+			level = bottom_lock_step;
+	}
+
 	return level;
 }
 
@@ -582,6 +604,8 @@ mali_bool init_mali_dvfs_status(int step)
 	if (!mali_dvfs_wq)
 		mali_dvfs_wq = create_singlethread_workqueue("mali_dvfs");
 
+	_mali_osk_atomic_init(&bottomlock_status, 0);
+
 	/*add a error handling here*/
 	set_mali_dvfs_current_step(step);
 
@@ -592,6 +616,9 @@ void deinit_mali_dvfs_status(void)
 {
 	if (mali_dvfs_wq)
 		destroy_workqueue(mali_dvfs_wq);
+
+	_mali_osk_atomic_term(&bottomlock_status);
+
 	mali_dvfs_wq = NULL;
 }
 
@@ -610,16 +637,12 @@ int change_dvfs_tableset(int change_clk, int change_step)
 
 	if (change_clk < mali_dvfs_all[1].clock) {
 		mali_dvfs[change_step].clock = mali_dvfs_all[0].clock;
-		mali_dvfs[change_step].vol = mali_dvfs[0].vol;
 	} else if (change_clk < mali_dvfs_all[2].clock && change_clk >= mali_dvfs_all[1].clock) {
 		mali_dvfs[change_step].clock = mali_dvfs_all[1].clock;
-		mali_dvfs[change_step].vol = mali_dvfs[1].vol;
 	} else if (change_clk < mali_dvfs_all[3].clock && change_clk >= mali_dvfs_all[2].clock) {
 		mali_dvfs[change_step].clock = mali_dvfs_all[2].clock;
-		mali_dvfs[change_step].vol = mali_dvfs[2].vol;
 	} else {
 		mali_dvfs[change_step].clock = mali_dvfs_all[3].clock;
-		mali_dvfs[change_step].vol = mali_dvfs[3].vol;
 	}
 
 	MALI_PRINT((":::mali dvfs step %d clock and voltage = %d Mhz, %d V\n",change_step, mali_dvfs[change_step].clock, mali_dvfs[change_step].vol));
@@ -649,3 +672,51 @@ void mali_default_step_set(int step, mali_bool boostup)
 	if (maliDvfsStatus.currentStep == 1)
 		set_mali_dvfs_status(step, boostup);
 }
+
+int mali_dvfs_bottom_lock_push(int lock_step)
+{
+	int prev_status = _mali_osk_atomic_read(&bottomlock_status);
+
+	if (prev_status < 0) {
+		MALI_PRINT(("gpu bottom lock status is not valid for push\n"));
+		return -1;
+	}
+	if (bottom_lock_step < lock_step) {
+		bottom_lock_step = lock_step;
+		if (get_mali_dvfs_status() < lock_step) {
+			mali_regulator_set_voltage(mali_dvfs[lock_step].vol,
+						   mali_dvfs[lock_step].vol);
+			mali_clk_set_rate(mali_dvfs[lock_step].clock,
+					  mali_dvfs[lock_step].freq);
+			set_mali_dvfs_current_step(lock_step);
+		}
+	}
+	return _mali_osk_atomic_inc_return(&bottomlock_status);
+}
+
+int mali_dvfs_bottom_lock_pop(void)
+{
+	int prev_status = _mali_osk_atomic_read(&bottomlock_status);
+	if (prev_status <= 0) {
+		MALI_PRINT(("gpu bottom lock status is not valid for pop\n"));
+		return -1;
+	} else if (prev_status == 1) {
+		bottom_lock_step = 0;
+		MALI_PRINT(("gpu bottom lock release\n"));
+	}
+
+	return _mali_osk_atomic_dec_return(&bottomlock_status);
+}
+
+#if MALI_VOLTAGE_LOCK
+int mali_vol_get_from_table(int vol)
+{
+	int i;
+	for (i = 0; i < MALI_DVFS_STEPS; i++) {
+		if (mali_dvfs[i].vol >= vol)
+			return mali_dvfs[i].vol;
+	}
+	MALI_PRINT(("Failed to get voltage from mali_dvfs table, maximum voltage is %d uV\n", mali_dvfs[MALI_DVFS_STEPS-1].vol));
+	return 0;
+}
+#endif
