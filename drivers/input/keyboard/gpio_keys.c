@@ -379,6 +379,8 @@ static struct attribute_group gpio_keys_attr_group = {
 	.attrs = gpio_keys_attrs,
 };
 
+void gpu_boost_on_touch(void);
+
 static void gpio_keys_report_event(struct gpio_button_data *bdata)
 {
 	struct gpio_keys_button *button = bdata->button;
@@ -394,6 +396,7 @@ static void gpio_keys_report_event(struct gpio_button_data *bdata)
 		bdata->key_state = !!state;
 
 		input_event(input, type, button->code, irqd_is_wakeup_set(&desc->irq_data) ? 1 : !!state);
+		if(!!state) gpu_boost_on_touch();
 	}
 
 	input_sync(input);
