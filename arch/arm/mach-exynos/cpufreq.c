@@ -142,6 +142,10 @@ static int exynos_target(struct cpufreq_policy *policy,
 	if (index == exynos_info->max_current_idx && old_index > smooth_level)
 		index = max(smooth_level, exynos_info->max_current_idx);
 #endif
+/* prevent freqs going above max policy - netarchy */
+	while (exynos_info->freq_table[index].frequency > policy->max) {
+		index += 1;
+	}
 
 	freqs.new = freq_table[index].frequency;
 /* MVP Begins */

@@ -197,7 +197,6 @@ static ssize_t show_available_freqs(struct cpufreq_policy *policy, char *buf)
 	return count;
 
 }
-
 #if defined(CONFIG_CPU_EXYNOS4210)
 extern ssize_t store_available_freqs_exynos4210(struct cpufreq_policy *policy,
 		     const char *buf, size_t count);

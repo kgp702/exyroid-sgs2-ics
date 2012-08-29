@@ -552,6 +552,7 @@ static ssize_t show_scaling_setspeed(struct cpufreq_policy *policy, char *buf)
 
 	return policy->governor->show_setspeed(policy, buf);
 }
+
 extern ssize_t acpuclk_get_vdd_levels_str(char *buf);
 static ssize_t show_vdd_levels(struct cpufreq_policy *policy, char *buf)
 {
@@ -654,9 +655,9 @@ cpufreq_freq_attr_rw(scaling_max_freq);
 cpufreq_freq_attr_rw(scaling_governor);
 cpufreq_freq_attr_rw(scaling_setspeed);
 cpufreq_freq_attr_rw(vdd_levels);
-/* UV table */ 
-cpufreq_freq_attr_rw(UV_mV_table); 
-cpufreq_freq_attr_rw(smooth_level); 
+/* UV table */
+cpufreq_freq_attr_rw(UV_mV_table);
+cpufreq_freq_attr_rw(smooth_level);
 
 static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
