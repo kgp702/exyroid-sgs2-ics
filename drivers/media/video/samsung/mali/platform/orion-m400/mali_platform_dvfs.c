@@ -75,8 +75,8 @@ mali_dvfs_table mali_dvfs[MALI_DVFS_STEPS]={
 	{330  ,1000000    ,1100000} };
 mali_dvfs_threshold_table mali_dvfs_threshold[MALI_DVFS_STEPS]={
 	{0   , 70},
-	{62  , 90},
-	{85  , 90},
+	{45  , 90},
+	{70  , 90},
 	{90  ,100}
 };
 
