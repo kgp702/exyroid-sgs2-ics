@@ -306,6 +306,11 @@ int exynos_cpufreq_lock(unsigned int nId,
 	volt_table = exynos_info->volt_table;
 	freq_table = exynos_info->freq_table;
 
+	//do not lock to higher than max(policymax,1200) -gm
+	enum cpufreq_level_index level;
+	exynos_cpufreq_get_level(policy->max, &level);
+	if(cpufreq_level < L4) cpufreq_level = max(L4,level);
+
 	mutex_lock(&set_cpu_freq_lock);
 	if (g_cpufreq_lock_id & (1 << nId)) {
 		printk(KERN_ERR "%s:Device [%d] already locked cpufreq\n",
