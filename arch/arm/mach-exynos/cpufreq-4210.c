@@ -484,6 +484,12 @@ static void __init set_volt_table(void)
 		exynos4210_freq_table[L4].frequency = CPUFREQ_ENTRY_INVALID;
 	exynos4210_freq_table[L0].frequency = CPUFREQ_ENTRY_INVALID;
 	exynos4210_freq_table[L1].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L5].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L9].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L10].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L12].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L13].frequency = CPUFREQ_ENTRY_INVALID;
+	exynos4210_freq_table[L15].frequency = CPUFREQ_ENTRY_INVALID;
 	exynos4210_freq_table[L16].frequency = CPUFREQ_ENTRY_INVALID;
 	exynos4210_freq_table[L17].frequency = CPUFREQ_ENTRY_INVALID;
 
