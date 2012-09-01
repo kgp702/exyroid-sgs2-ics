@@ -1209,8 +1209,6 @@ static int __devinit mxt224_init_touch_driver(struct mxt224_data *data)
 	return ret;
 }
 
-extern void gpu_boost_on_touch(void);
-
 static void report_input_data(struct mxt224_data *data)
 {
 	int i;
@@ -1335,10 +1333,6 @@ static void report_input_data(struct mxt224_data *data)
 				DVFS_LOCK_ID_TSP,
 				level);
 			copy_data->lock_status = 1;
-		}
-		if(touch_is_pressed)
-		{
-			gpu_boost_on_touch();
 		}
 	}
 }

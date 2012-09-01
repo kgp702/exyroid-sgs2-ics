@@ -747,8 +747,6 @@ void touchkey_firmware_update(void)
 }
 #endif
 
-extern void gpu_boost_on_touch(void);
-
 #ifndef TEST_JIG_MODE
 void touchkey_work_func(struct work_struct *p)
 {
@@ -787,10 +785,9 @@ void touchkey_work_func(struct work_struct *p)
 		return;
 	}
 
-	if (pressed) {
+	if (pressed)
 		set_touchkey_debug('P');
-		gpu_boost_on_touch();
-	}
+
 	if (get_tsp_status() && pressed)
 		printk(KERN_DEBUG "[TouchKey] touchkey pressed but don't send event because touch is pressed.\n");
 	else {
