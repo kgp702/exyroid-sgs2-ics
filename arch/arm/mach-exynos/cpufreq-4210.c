@@ -254,8 +254,9 @@ static void exynos4210_set_frequency(unsigned int old_index,
 	unsigned int tmp;
 
 	sec_debug_aux_log(SEC_DEBUG_AUXLOG_CPU_BUS_CLOCK_CHANGE,
-			"%s: old_index=%d, new_index=%d.",
-			__func__, old_index, new_index);
+			"%s: old_index=%d, new_index=%d(%ps)",
+			__func__, old_index, new_index,
+			__builtin_return_address(0));
 
 	if (old_index > new_index) {
 		if (!exynos4210_pms_change(old_index, new_index)) {
@@ -306,8 +307,13 @@ static void __init set_volt_table(void)
 
 	switch (tmp  & (SUPPORT_FREQ_MASK << SUPPORT_FREQ_SHIFT)) {
 	case SUPPORT_1400MHZ:
+#if defined(CONFIG_EXYNOS4210_1200MHZ_SUPPORT)
+		for_1200 = true;
+		max_support_idx = L1;
+#else
 		for_1400 = true;
 		max_support_idx = L0;
+#endif
 		break;
 	case SUPPORT_1200MHZ:
 		for_1200 = true;
