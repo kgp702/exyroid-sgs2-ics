@@ -351,7 +351,7 @@ CFLAGS_MODULE   =
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  =
 CFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -pipe
-AFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -pipe
+AFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -mvectorize-with-neon-quad -pipe
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
 
@@ -371,7 +371,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-delete-null-pointer-checks \
 		   -mtune=cortex-a9 -march=armv7-a -mfpu=neon -mfloat-abi=hard \
 		   -fno-gcse -fsingle-precision-constant -funswitch-loops \
-		   -fprofile-correction -falign-loops -fipa-cp-clone \
+		   -fprofile-correction -falign-loops -fipa-cp-clone -mvectorize-with-neon-quad \
 		   -pipe -mthumb
 
 KBUILD_AFLAGS_KERNEL :=
