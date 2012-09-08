@@ -350,8 +350,8 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  =
-CFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -pipe
-AFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -mvectorize-with-neon-quad -pipe
+CFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -fmodulo-sched -fmodulo-sched-allow-regmoves -pipe
+AFLAGS_KERNEL	= -mtune=cortex-a9 -march=armv7-a -mfpu=neon -fno-gcse -fsingle-precision-constant -funswitch-loops -fprofile-correction -falign-loops -fipa-cp-clone -mvectorize-with-neon-quad -fmodulo-sched -fmodulo-sched-allow-regmoves -pipe
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
 
@@ -372,6 +372,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -mtune=cortex-a9 -march=armv7-a -mfpu=neon -mfloat-abi=hard \
 		   -fno-gcse -fsingle-precision-constant -funswitch-loops \
 		   -fprofile-correction -falign-loops -fipa-cp-clone -mvectorize-with-neon-quad \
+		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
 		   -pipe -mthumb
 
 KBUILD_AFLAGS_KERNEL :=
